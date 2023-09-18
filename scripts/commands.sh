@@ -10,3 +10,7 @@ done
 
 echo "@@@ Database iniciado com sucesso($POSTGRES_HOST:$POSTGRES_PORT) @@@"
 
+collectstatic.sh
+makemigrations.sh
+migrate.sh
+runserver.sh
