@@ -26,6 +26,7 @@ class SiteSetup(models.Model):
         verbose_name_plural = 'Setup'
 
     title = models.CharField(max_length=65)
+    page_title = models.CharField(max_length=65, default='page_title')
     description = models.CharField(max_length=255)
 
     show_header = models.BooleanField(default=True)
