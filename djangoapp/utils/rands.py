@@ -12,6 +12,3 @@ def random_letters(k=5):
 
 def slugify_new(text):
     return slugify(text) + '-' + random_letters(7)
-
-
-print(slugify_new('wepllington almeida asdaksdççç'))
