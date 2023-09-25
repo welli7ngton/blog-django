@@ -4,3 +4,4 @@ Django==4.2.5
 sqlparse==0.4.4
 typing_extensions==4.7.1
 Pillow>=9.5.0,<9.6
+django-summernote>=0.8.20.0
