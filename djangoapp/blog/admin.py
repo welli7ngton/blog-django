@@ -1,5 +1,6 @@
 from django.contrib import admin
 from blog.models import Tags, Category, Page, Post
+from django_summernote.admin import SummernoteModelAdmin
 
 
 @admin.register(Tags)
@@ -61,8 +62,8 @@ class PageAdmin(admin.ModelAdmin):
 
 
 @admin.register(Post)
-class PostAdmin(admin.ModelAdmin):
-    # summernote_fiedls = 'content'
+class PostAdmin(SummernoteModelAdmin):
+    summernote_fiedls = ('content',)
     list_display = (
         'id', 'title', 'is_published', 'created_by'
     )
@@ -87,3 +88,10 @@ class PostAdmin(admin.ModelAdmin):
     autocomplete_fields = (
         'tags', 'category',
     )
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            obj.updated_by = request.user
+        else:
+            obj.created_by = request.user
+        obj.save()
