@@ -33,7 +33,7 @@
           <span class="post-meta-link">
             <i class="fa-solid fa-calendar-days"></i>
             <span>
-              {% now 'd/m/Y'%}
+              {{ post.created_at | date:'d/m/Y' }}
             </span>
           </span>
         </div>
