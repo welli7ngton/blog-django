@@ -5,6 +5,11 @@ from utils.images import resize_image
 from django_summernote.models import AbstractAttachment
 
 
+class PostManager(models.Manager):
+    def get_published(self):
+        return self.filter(is_published=True).order_by('-id')
+
+
 class PostAttachment(AbstractAttachment):
     def save(self, *args, **kwargs):
         if not self.name:
@@ -85,6 +90,9 @@ class Post(models.Model):
     class Meta:
         verbose_name = 'Post'
         verbose_name_plural = 'Posts'
+
+    objects = PostManager()
+
     title = models.CharField(max_length=100)
     slug = models.SlugField(
         unique=True, default='', null=False, blank=True, max_length=255
