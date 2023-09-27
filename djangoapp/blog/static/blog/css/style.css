@@ -195,6 +195,10 @@
     padding-bottom: var(--spacing-base);
   }
   
+.mt-base {
+  margin-top: var(--spacing-base);
+}
+
   .center {
     text-align: center;
   }
