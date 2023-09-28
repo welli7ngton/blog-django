@@ -12,30 +12,53 @@ PER_PAGE = 2
 class PostListView(ListView):
     template_name = 'blog/pages/index.html'
     queryset = Post.objects.get_published()
-    ordering = ('-pk',)
     paginate_by = PER_PAGE
+    context_object_name = 'posts'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Home -'
         return context
 
-# Function based view Index
 
-# def index(request):
-#     posts = Post.objects.get_published()
-#     paginator = Paginator(posts, PER_PAGE)
-#     page_number = request.GET.get("page")
-#     page_obj = paginator.get_page(page_number)
+class CreatedByListView(PostListView):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._temp_context = {}
 
-#     return render(
-#         request,
-#         'blog/pages/index.html',
-#         {
-#             'page_obj': page_obj,
-#             'page_title': 'Home',
-#         }
-#     )
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user = self._temp_context['user']
+        user_full_name = user.username
+
+        if user.first_name:
+            user_full_name = f'{user.first_name} {user.last_name}'
+        page_title = 'Posts de ' + user_full_name + ' - '
+
+        ctx.update({
+            'page_title': page_title,
+        })
+
+        return ctx
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.filter(created_by__pk=self._temp_context['user'].pk)
+        return qs
+
+    def get(self, request, *args, **kwargs):
+        _id = self.kwargs.get('_id')
+        user = User.objects.filter(pk=_id).first()
+
+        if user is None:
+            raise Http404
+
+        self._temp_context.update({
+            '_id': _id,
+            'user': user,
+        })
+
+        return super().get(request, *args, **kwargs)
 
 
 def created_by(request, _id):
