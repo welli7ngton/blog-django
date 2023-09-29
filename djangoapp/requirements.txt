@@ -1,7 +1,12 @@
-psycopg2-binary>=2.9.6,<2.10
 asgiref==3.7.2
-Django==4.2.5
+bleach==6.0.0
+Django>=4.2.5,<4.3
+django-axes==6.1.1
+django-summernote==0.8.20.0
+Pillow>=9.5.0,<9.6
+psycopg2-binary==2.9.7,<2.10
+python-dotenv==1.0.0
+six==1.16.0
 sqlparse==0.4.4
 typing_extensions==4.7.1
-Pillow>=9.5.0,<9.6
-django-summernote>=0.8.20.0
+webencodings==0.5.1
