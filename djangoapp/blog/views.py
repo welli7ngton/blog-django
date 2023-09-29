@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from blog.models import Post, Page
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.http import Http404
-from django.views.generic import ListView
+from django.views.generic import ListView, DeleteView
 
 PER_PAGE = 6
 
@@ -118,57 +118,33 @@ class SearchListView(PostListView):
         return super().get(request, *args, **kwargs)
 
 
-def search(request):
-    search_value = request.GET.get('search').strip()
-    posts = Post.objects.get_published().filter(
-        Q(title__icontains=search_value) |
-        Q(exerpt__icontains=search_value) |
-        Q(content__icontains=search_value)
-    )[0:PER_PAGE]
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'posts': posts,
-            'search_value': search_value,
-            'page_title': f'{search_value[:20]} - Search -',
-        }
-    )
+class PageDetailView(DeleteView):
+    model = Page
+    template_name = 'blog/pages/page.html'
+    slug_field = 'slug'
+    context_object_name = 'page'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        print(ctx)
+        single_page = self.get_object()
+        ctx['page_title'] = f'{single_page.title} - Página -'
+        return ctx
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_published=True)
 
 
-def page(request, slug):
-    single_page = (
-        Page.objects
-        .filter(is_published=True)
-        .filter(slug=slug)
-        .first()
-    )
+class PostDetailView(DeleteView):
+    model = Post
+    template_name = 'blog/pages/post.html'
+    context_object_name = 'post'
 
-    if single_page is None:
-        raise Http404()
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        single_post = self.get_object()
+        ctx['page_title'] = f'{single_post.title} - Post -'
+        return ctx
 
-    return render(
-        request,
-        'blog/pages/page.html',
-        {
-            'page': single_page,
-            'page_title': f'{single_page.title} - Página -',
-        }
-    )
-
-
-def post(request, slug):
-
-    single_post = Post.objects.get_published().filter(slug=slug).first()
-
-    if single_post is None:
-        raise Http404()
-
-    return render(
-        request,
-        'blog/pages/post.html',
-        {
-            'post': single_post,
-            'page_title': f'{single_post.title}',
-        }
-    )
+    def get_queryset(self):
+        return super().get_queryset().filter(is_published=True)
