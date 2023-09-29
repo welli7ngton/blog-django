@@ -1,12 +1,11 @@
-from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from blog.models import Post, Page
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.views.generic import ListView
 
-PER_PAGE = 2
+PER_PAGE = 6
 
 
 class PostListView(ListView):
@@ -61,69 +60,62 @@ class CreatedByListView(PostListView):
         return super().get(request, *args, **kwargs)
 
 
-def created_by(request, _id):
-    posts = Post.objects.get_published().filter(created_by__pk=_id)
+class CategoryListView(PostListView):
+    allow_empty = False
 
-    paginator = Paginator(posts, PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-    user = User.objects.filter(pk=_id).first()
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            category__slug=self.kwargs['slug']
+        )
 
-    if user is None:
-        raise Http404()
-
-    if user.first_name:
-        user_name = f'{user.first_name} {user.last_name}'
-
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': page_obj,
-            'page_title': f'{user_name} posts -',
-        }
-    )
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_title'] = f'{self.object_list[0].category.name} - Categoria'
+        return ctx
 
 
-def category(request, slug):
-    posts = Post.objects.get_published().filter(category__slug=slug)
+class TagListView(PostListView):
+    allow_empty = False
 
-    if len(posts) == 0:
-        raise Http404()
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            tags__slug=self.kwargs['slug']
+        )
 
-    paginator = Paginator(posts, PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': page_obj,
-            'page_title': f'{page_obj[0].category.name} - Categoria -',
-        }
-    )
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_title'] = f'{self.object_list[0].tags.first().name} - Tag -'
+        return ctx
 
 
-def tag(request, slug):
-    posts = Post.objects.get_published().filter(tags__slug=slug)
+class SearchListView(PostListView):
+    def __init__(self, *agrs, **kwargs) -> None:
+        super().__init__(*agrs, **kwargs)
+        self._search_value = ''
 
-    paginator = Paginator(posts, PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    def setup(self, request, *args, **kwargs) -> None:
+        self._search_value = request.GET.get('search').strip()
+        return super().setup(request, *args, **kwargs)
 
-    if len(page_obj) == 0:
-        raise Http404()
+    def get_queryset(self):
+        qs = super().get_queryset().filter(
+            Q(title__icontains=self._search_value) |
+            Q(exerpt__icontains=self._search_value) |
+            Q(content__icontains=self._search_value)
+        )[0:PER_PAGE]
+        return qs
 
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': page_obj,
-            'page_title': f'{page_obj[0].tags.first().name} - Tag -',
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
 
-        }
-    )
+        ctx['page_title'] = f'{self._search_value[:20]} - Search -'
+        ctx['search_value'] = self._search_value
+        return ctx
+
+    def get(self, request, *args, **kwargs):
+        if self._search_value == '':
+            return redirect('blog:index')
+        return super().get(request, *args, **kwargs)
 
 
 def search(request):
@@ -133,12 +125,11 @@ def search(request):
         Q(exerpt__icontains=search_value) |
         Q(content__icontains=search_value)
     )[0:PER_PAGE]
-
     return render(
         request,
         'blog/pages/index.html',
         {
-            'page_obj': posts,
+            'posts': posts,
             'search_value': search_value,
             'page_title': f'{search_value[:20]} - Search -',
         }
