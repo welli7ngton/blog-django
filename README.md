@@ -1,4 +1,4 @@
-# 📝 Blog em Python e Django 🌐
+# 📝 Blog Python e Django 🌐
 
 Bem-vindo ao repositório do nosso Blog desenvolvido com a poderosa combinação de Python e Django! Este projeto é uma plataforma versátil e dinâmica para compartilhamento de conteúdo, permitindo que você crie, gerencie e publique postagens de maneira eficiente.
 
